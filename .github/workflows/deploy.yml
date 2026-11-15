@@ -1,0 +1,32 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main] # runs on every push to main
+  workflow_dispatch: # adds a manual "Run workflow" button
+
+permissions:
+  contents: read
+  pages: write # allowed to publish to Pages
+  id-token: write # proves to Pages that the deploy comes from this repo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5 # get your code
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci # clean install from package-lock.json
+      - run: npm run build # creates dist/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist # upload only the built site
+      - id: deployment
+        uses: actions/deploy-pages@v4 # publish it
